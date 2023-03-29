@@ -109,15 +109,18 @@ namespace RtlAmrCapture
                 //We restarted more that 10 times.  Lets kill and have the service restarted.
                 if (_restartCount > _serviceConfiguration.Value.RestartCountToShutdown)
                 {
+                    _logger.LogError("Restart count of {_restartCount} service to shutdown.",_restartCount);
                     Environment.Exit(1);
                 }
 
-                if (_lastSample.AddMinutes(_serviceConfiguration.Value.HandDetectionMinutes) < DateTimeOffset.Now)
+                if (_lastSample.AddMinutes(_serviceConfiguration.Value.HangDetectionMinutes) < DateTimeOffset.Now)
                 {
                     _listeningTaskCancellationToken.Cancel();
                     _lastSample = DateTimeOffset.MinValue;
-                    _logger.LogWarning("Detected {minutes} minute hang.  Restarting listener.", _serviceConfiguration.Value.HandDetectionMinutes);
+                    _logger.LogWarning("Detected {minutes} minute hang.  Restarting listener.", _serviceConfiguration.Value.HangDetectionMinutes);
                 }
+
+                await Task.Delay(1000, _windowsServiceCancellationToken);
             }
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
