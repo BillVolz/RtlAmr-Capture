@@ -13,6 +13,9 @@ namespace RtlAmrCapture.Config
 
         public DataBaseConnections[]? Connections { get; set; }
 
+        public int HandDetectionMinutes { get; set; } = 5;
+
+        public int RestartCountToShutdown { get; set; } = 5;
     }
 
     public class DataBaseConnections

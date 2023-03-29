@@ -18,7 +18,7 @@ namespace RtlAmrCapture.Services
             _options = options;
         }
 
-        public async Task<bool> CaptureApp(Action<string?> lineCapture, CancellationToken cancellationToken)
+        public async Task<int> CaptureApp(Action<string, CancellationToken> lineCapture, CancellationToken cancellationToken)
         {
             var process = new Process();
             process.StartInfo.CreateNoWindow = true;
@@ -27,15 +27,18 @@ namespace RtlAmrCapture.Services
             process.StartInfo.WorkingDirectory = Path.GetDirectoryName(_options.Value.FullPathToRtlAmr);
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
 
             process.OutputDataReceived += (sender, args) =>
             {
-                lineCapture(args.Data);
+                if (args.Data != null) lineCapture(args.Data, cancellationToken);
             };
             process.Start();
             process.BeginOutputReadLine();
             await process.WaitForExitAsync(cancellationToken);
-            return true;
+            if (process.ExitCode != 0)
+                throw (new Exception($"Processed closed Code: {process.ExitCode} {await process.StandardError.ReadToEndAsync()}"));
+            return process.ExitCode;
         }
     }
 }
